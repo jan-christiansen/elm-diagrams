@@ -1,23 +1,24 @@
-module Diagrams.RealType where
+module Diagrams.RealType exposing (..)
 
-import Graphics.Element as E
-import Graphics.Collage as C
-import Text as T
-
+import Collage as C
+import Diagrams.Actions exposing (..)
 import Diagrams.FillStroke exposing (..)
 import Diagrams.Geom exposing (..)
-import Diagrams.Actions exposing (..)
+import Element as E
+import Text as T
 
-type Diagram t a
+
+type
+    Diagram t a
     -- primitives
     = Circle Float FillStroke
     | Rect Float Float FillStroke
     | Polygon (List Point) FillStroke
     | Path (List Point) C.LineStyle
     | Text String T.Style E.Element
-    -- transformation
+      -- transformation
     | TransformD Transform (Diagram t a)
-    -- group
+      -- group
     | Group (List (Diagram t a))
-    -- tag
+      -- tag
     | Tag t (ActionSet t a) (Diagram t a)
