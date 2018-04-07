@@ -19,6 +19,7 @@ import Diagrams.Wiring exposing (..)
 import Element as E
 import Html exposing (Html)
 import List as L
+import Task
 import Text as T
 import Window
 
@@ -93,54 +94,43 @@ testDia =
     showOrigin <| showBBox <| alignCenter <| above stuff (above stuff moreStuff)
 
 
-type alias Model =
-    ()
+type Msg
+    = Resize Window.Size
 
 
-initModel : Model
+type Model
+    = NoSize
+    | Size Window.Size
+
+
+initModel : ( Model, Cmd Msg )
 initModel =
-    ()
+    ( NoSize, Task.perform Resize Window.size )
 
 
-update : msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    model
+    case msg of
+        Resize size ->
+            ( Size size, Cmd.none )
 
 
 view : Model -> Html msg
 view model =
-    E.toHtml (fullWindowView ( 400, 400 ) testDia)
+    case model of
+        NoSize ->
+            Html.text "Waiting for size of window"
+
+        Size { width, height } ->
+            E.toHtml <|
+                fullWindowView ( width, height ) testDia
 
 
-
--- case model of
---     Size dims ->
---         E.toHtml <| fullWindowView dims testDia
-
-
-main : Program Never Model msg
+main : Program Never Model Msg
 main =
-    -- Html.program
-    --     { init = initModel
-    --     , subscriptions = Window.resizes Resize
-    --     , view = view
-    --     , update = update
-    --     }
-    Html.beginnerProgram
-        { model = initModel
+    Html.program
+        { init = initModel
+        , subscriptions = \_ -> Window.resizes Resize
         , view = view
         , update = update
         }
-
-
-
--- diagrams : Signal (Diagram Tag Action)
--- diagrams =
---     interactFold updateF renderF fullWindowCollageLocFunc initModel
--- main =
---     Signal.map2
---         (\dims diagram ->
---             Html.fromElement <| fullWindowView dims diagram
---         )
---         Window.dimensions
---         diagrams
