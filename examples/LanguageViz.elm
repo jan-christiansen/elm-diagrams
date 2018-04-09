@@ -6,8 +6,11 @@ import Diagrams.Core exposing (..)
 import Diagrams.FillStroke exposing (..)
 import Diagrams.FullWindow exposing (..)
 import Diagrams.Type exposing (..)
+import Element as E
+import Html exposing (Html)
 import List as L
 import Mouse
+import Task
 import Text as T
 import Window
 
@@ -92,8 +95,8 @@ varDia v =
 -- VIEW
 
 
-view : Expr -> Diagram t a
-view expr =
+diagram : Expr -> Diagram t a
+diagram expr =
     case expr of
         IntLit x ->
             text intLitStyle (toString x)
@@ -112,14 +115,14 @@ view expr =
                 comma =
                     text defTextStyle ","
 
-                argsViews =
-                    L.map view args
+                argsviews =
+                    L.map diagram args
 
                 allArgs =
-                    hcat <| L.intersperse comma argsViews
+                    hcat <| L.intersperse comma argsviews
             in
             hcat
-                [ view func
+                [ diagram func
                 , text defTextStyle "("
                 , allArgs
                 , text defTextStyle ")"
@@ -127,9 +130,9 @@ view expr =
 
         IfExpr cond tbranch fbranch ->
             vcatA LeftA
-                [ hcat [ keyword "if", hSpacer, view cond ]
-                , hcat [ keyword "then", hSpacer, view tbranch ]
-                , hcat [ keyword "else", hSpacer, view fbranch ]
+                [ hcat [ keyword "if", hSpacer, diagram cond ]
+                , hcat [ keyword "then", hSpacer, diagram tbranch ]
+                , hcat [ keyword "else", hSpacer, diagram fbranch ]
                 ]
 
         LetExpr bindings expr ->
@@ -138,14 +141,14 @@ view expr =
                     keyword "="
 
                 binding ( name, exp ) =
-                    hcat [ varDia name, hSpacer, eq, hSpacer, view exp ]
+                    hcat [ varDia name, hSpacer, eq, hSpacer, diagram exp ]
 
                 bindingDias =
                     L.map binding bindings
             in
             vcatA LeftA
                 [ hcat [ keyword "let", hSpacer, vcat bindingDias ]
-                , hcat [ keyword "in", hSpacer, view expr ]
+                , hcat [ keyword "in", hSpacer, diagram expr ]
                 ]
 
         _ ->
@@ -174,8 +177,9 @@ expr =
 
 
 dia =
-    alignCenter <| view expr
+    alignCenter <| diagram expr
 
 
+main : Program Never Model Msg
 main =
     fullWindowMain dia

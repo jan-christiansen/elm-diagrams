@@ -13,6 +13,8 @@ import Diagrams.Core exposing (..)
 import Diagrams.Type exposing (..)
 import Diagrams.Wiring exposing (..)
 import Element as E
+import Html exposing (Html)
+import Task
 import Window
 
 
@@ -44,6 +46,48 @@ fullWindowCollageLocFunc dims =
 -- fullWindowMain : Diagram t a -> Signal E.Element
 -- fullWindowMain dia =
 --     S.map (\dims -> fullWindowView dims dia) Window.dimensions
+
+
+type Msg
+    = Resize Window.Size
+
+
+type Model
+    = NoSize
+    | Size Window.Size
+
+
+initModel : ( Model, Cmd Msg )
+initModel =
+    ( NoSize, Task.perform Resize Window.size )
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        Resize size ->
+            ( Size size, Cmd.none )
+
+
+view : Diagram t a -> Model -> Html msg
+view diagram model =
+    case model of
+        NoSize ->
+            Html.text "Waiting for size of window"
+
+        Size { width, height } ->
+            E.toHtml <|
+                fullWindowView ( width, height ) diagram
+
+
+fullWindowMain : Diagram t a -> Program Never Model Msg
+fullWindowMain diagram =
+    Html.program
+        { init = initModel
+        , subscriptions = \_ -> Window.resizes Resize
+        , view = view diagram
+        , update = update
+        }
 
 
 {-| -}
